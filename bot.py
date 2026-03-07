@@ -6,15 +6,15 @@ import os
 
 # Discordトークンを環境変数から取得
 TOKEN = os.getenv("DISCORD_TOKEN")
-if TOKEN is None:
+if not TOKEN:
     print("Error: DISCORD_TOKEN が設定されていません")
     exit(1)
 
 intents = discord.Intents.default()
-intents.message_content = True  # 必要に応じてオン
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# データファイル
+# データファイルはアプリ内に置く
 DATA_FILE = "reviews.json"
 STAFF_FILE = "staff.json"
 
@@ -46,6 +46,7 @@ async def on_ready():
     print(f"{bot.user} がログインしました")
 
 # --- スラッシュコマンド ---
+# /staff_add
 @bot.tree.command(name="staff_add", description="スタッフ登録")
 @app_commands.describe(user="登録するスタッフ")
 async def staff_add(interaction: discord.Interaction, user: discord.Member):
@@ -57,6 +58,7 @@ async def staff_add(interaction: discord.Interaction, user: discord.Member):
     save_staff(staff)
     await interaction.response.send_message(f"{user.mention} をスタッフ登録しました")
 
+# /review
 @bot.tree.command(name="review", description="スタッフを評価")
 @app_commands.describe(user="スタッフ", rating="評価(1〜5)", comment="コメント")
 async def review(interaction: discord.Interaction, user: discord.Member, rating: int, comment: str):
@@ -82,6 +84,7 @@ async def review(interaction: discord.Interaction, user: discord.Member, rating:
     save_reviews(data)
     await interaction.response.send_message("レビューを送信しました")
 
+# /average
 @bot.tree.command(name="average", description="平均評価")
 @app_commands.describe(staff="スタッフ")
 async def average(interaction: discord.Interaction, staff: discord.Member):
@@ -94,6 +97,7 @@ async def average(interaction: discord.Interaction, staff: discord.Member):
     avg = sum(ratings) / len(ratings)
     await interaction.response.send_message(f"{staff.mention}\n平均⭐ {avg:.2f}\nレビュー数 {len(ratings)}")
 
+# /comments
 @bot.tree.command(name="comments", description="レビューを見る")
 @app_commands.describe(staff="スタッフ")
 async def comments(interaction: discord.Interaction, staff: discord.Member):
@@ -107,6 +111,7 @@ async def comments(interaction: discord.Interaction, staff: discord.Member):
         text += f"⭐{r['stars']} - {r['comment']}\n"
     await interaction.response.send_message(text)
 
+# /ranking
 @bot.tree.command(name="ranking", description="スタッフランキング")
 async def ranking(interaction: discord.Interaction):
     data = load_reviews()
@@ -126,6 +131,7 @@ async def ranking(interaction: discord.Interaction):
         text += f"{i}位 <@{staff_id}> ⭐{avg:.2f} ({count}件)\n"
     await interaction.response.send_message(text)
 
+# /profile
 @bot.tree.command(name="profile", description="スタッフプロフィール")
 @app_commands.describe(staff="スタッフ")
 async def profile(interaction: discord.Interaction, staff: discord.Member):
@@ -137,7 +143,7 @@ async def profile(interaction: discord.Interaction, staff: discord.Member):
     reviews = data[staff_id]
     ratings = [r["stars"] for r in reviews]
     avg = sum(ratings) / len(ratings)
-    star_count = {i: ratings.count(i) for i in range(1, 6)}
+    star_count = {i: ratings.count(i) for i in range(1,6)}
     text = f"""
 📊 スタッフプロフィール
 スタッフ : {staff.mention}
